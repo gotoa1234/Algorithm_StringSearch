@@ -1,2 +1,8 @@
 ﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+using Algorithm_StringSearch.StringSearch;
+
+var temp = new RabinKarpAlgorithmExecute();
+temp.Execute();
+
+
+Console.WriteLine("Wait a minute.");
