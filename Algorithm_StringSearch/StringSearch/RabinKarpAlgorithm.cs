@@ -8,7 +8,7 @@ namespace Algorithm_StringSearch.StringSearch
         {
             // ASCII 中 A=65, F=70, K=75
             string text = "AAAFFFKKK";
-            string pattern = "AFF";
+            string pattern = "AAF";
             new Method_RollingHash(text, pattern);
             new Method_RabinFingerprint(text, pattern);
         }
@@ -133,11 +133,11 @@ namespace Algorithm_StringSearch.StringSearch
         public class Method_RabinFingerprint
         {
             /* 演算:
- * Step1 : 得到 pattern 65+70+70 = 205 的 Hash 值 (AFF)， 並且得到 text 三個字元 65+65+65 = 195 的 Hash 值 (AAA)
+ * Step1 : 得到 pattern = 76 的 Hash 值 (AFF)， 並且得到 text 三個字元 = 3的 Hash 值 (AAA)
    Step2 : 進行滑動窗口處理，如果 Hash 相等，則進一步比較，如果不相等，則更新 Hash 值
-   Step3 : 更新 text Hash值 ，從 195 變成 65+65+70 = 200 (AAA -> AAF)
+   Step3 : 更新 text Hash值 ，從 3 變成 8 (AAA -> AAF)
    Step4 : 進行滑動窗口處理，如果 Hash 相等，則進一步比較，如果不相等，則更新 Hash 值
-   Step5 : 更新 text Hash值 ，從 200 變成 65+70+70 = 205 (AAF -> AFF)
+   Step5 : 更新 text Hash值 ，從 8 變成 76 (AAF -> AFF)
    Step6 : 進行滑動窗口處理，此時 Hash 相等，進一步比較，完全匹配，返回索引
  */
 
@@ -163,45 +163,73 @@ namespace Algorithm_StringSearch.StringSearch
                 }
             }
 
+            /// <summary>
+            /// 計算拉賓指紋
+            /// </summary>
+            /// <param name="str">傳入的字串</param>
+            /// <param name="start">起始索引</param>
+            /// <param name="length">總長度</param>
+            /// <param name="prime">質數</param>
+            /// <return></return>
             private int CalculateRabinFingerprint(string str, int start, int length, int prime)
             {
                 int hash = 0;
-                for (int i = start; i < start + length; i++)
+                for (int index = start; index < start + length; index++)
                 {
-                    hash = (hash * 256 + str[i]) % prime; // 使用质数 prime 进行模运算
+                    // 使用合適的質數取餘數
+                    hash = (hash * 256 + str[index]) % prime; 
                 }
                 return hash;
             }
 
+            /// <summary>
+            /// 拉賓卡普搜索算法 - 拉賓指紋 (Rabin-Karp Algorithm)
+            /// </summary>
+            /// <param name="text">原始資料</param>
+            /// <param name="pattern">查詢的字串</param>
+            /// <param name="prime">使用自定義的質數</param>
+            /// <returns></returns>
             private int RabinKarpSearch(string text, string pattern, int prime)
             {
-                int n = text.Length;
-                int m = pattern.Length;
-                int patternHash = CalculateRabinFingerprint(pattern, 0, m, prime);
-                int textHash = CalculateRabinFingerprint(text, 0, m, prime);
+                // 1. 預處理：計算文字和查詢對象的 Hash
+                int textLength = text.Length;
+                int targetLength = pattern.Length;
+                int patternHash = CalculateRabinFingerprint(pattern, 0, targetLength, prime);
+                int textHash = CalculateRabinFingerprint(text, 0, targetLength, prime);
 
-                for (int i = 0; i <= n - m; i++)
+                // 2. 滑動窗口處理 ※最多滑動 textLength - patternLength 次
+                for (int index = 0; index <= textLength - targetLength; index++)
                 {
+                    // 3-1. 匹配，如果 Hash 相等，則進一步比較
                     if (patternHash == textHash)
                     {
-                        int j;
-                        for (j = 0; j < m; j++)
+                        int findeIndex;
+                        // 3-2. 進一步比較，比對字元是否相等
+                        for (findeIndex = 0; findeIndex < targetLength; findeIndex++)
                         {
-                            if (text[i + j] != pattern[j])
+                            if (text[index + findeIndex] != pattern[findeIndex])
                                 break;
                         }
-                        if (j == m)
-                            return i;
+                        if (findeIndex == targetLength)
+                            return index;
                     }
-                    if (i < n - m)
+                    // 3-3. 不匹配，更新 Hash 值
+                    if (index < textLength - targetLength)
                     {
-                        // 更新文本窗口的哈希值
-                        textHash = (textHash * 256 + text[i + m] - text[i] * (int)Math.Pow(256, m)) % prime;
-                        // 负值转正
+                        // 3-4. 更新文本窗口的哈希值
+                        // ※ 舊Hash * 基數(這裡256) + 新字符 - 舊字符 * [基數(256)的目標字串長度平方]
+                        // ※ Base 一定要選擇當前字符串大的值，例如 A-Z 共 26個字母，建議32或64，避免 Hash 碰撞
+                        // ※ 此外 Base 愈小效能愈佳，但以現代電腦來說，差異不大
+                        textHash = (textHash * 256 + 
+                                    text[index + targetLength] - 
+                                    text[index] * (int)Math.Pow(256, targetLength)
+                                   ) % prime;
+                        // 3-5. 負數轉正
                         if (textHash < 0)
                             textHash = (textHash + prime);
                     }
                 }
+                // 5. 沒找到，返回 -1
                 return -1;
             }
         }
