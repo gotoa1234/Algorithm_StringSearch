@@ -5,8 +5,8 @@
         public void Execute()
         {
             var method = new KMPAlgorithm();
-            string target = "How did you get into software engineering?";
-            string pattern = "software";
+            string target = "inxinyiz inxinyin?";
+            string pattern = "inxinyinxiny";
             List<int> matchPositions = method.KMPSearch(target, pattern);
 
             Console.WriteLine("匹配位置:");
@@ -30,20 +30,21 @@
         public int[] ComputePrefixFunction(string pattern)
         {            
             var matchTable = new int[pattern.Length];
-            int innerIndex = 0;// 最常公共前綴後綴長度
+            int commonIndex = 0;// 最常公共前綴後綴長度
 
-            for (int index = 1; index < pattern.Length; index++)
+            // 跳過自己跟自己比對，因此從第二個字符 (serachIndex = 1) 開始計算
+            for (int serachIndex = 1; serachIndex < pattern.Length; serachIndex++)
             {
-                while (innerIndex > 0 && 
-                       pattern[index] != pattern[innerIndex])
+                while (commonIndex > 0 && 
+                       pattern[serachIndex] != pattern[commonIndex])
                 {
-                    innerIndex = matchTable[innerIndex - 1];
+                    commonIndex = matchTable[commonIndex - 1];
                 }
-                if (pattern[index] == pattern[innerIndex])
+                if (pattern[serachIndex] == pattern[commonIndex])
                 {
-                    innerIndex++;
+                    commonIndex++;
                 }
-                matchTable[index] = innerIndex;
+                matchTable[serachIndex] = commonIndex;
             }
             return matchTable;
         }
