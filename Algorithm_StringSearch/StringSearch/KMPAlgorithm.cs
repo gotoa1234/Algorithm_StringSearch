@@ -5,8 +5,8 @@
         public void Execute()
         {
             var method = new KMPAlgorithm();
-            string target = "abacaabaccabacabacab";
-            string pattern = "abacab";
+            string target = "CECDCEDCCDCECDCCDC";
+            string pattern = "CDCECDC";
             List<int> matchPositions = method.KMPSearch(target, pattern);
 
             Console.WriteLine("匹配位置:");
@@ -25,7 +25,7 @@
         }
 
         /// <summary>
-        /// 1. 計算部分匹配表
+        /// 1. 計算部分匹配表 (失配函式)
         /// </summary>       
         public int[] ComputePrefixFunction(string pattern)
         {            
@@ -97,3 +97,94 @@
 
 
 }
+
+/*
+ abacaabaccabacabacab
+abacab
+     -
+	abacab
+     -
+	 abacab
+	     abacab
+		  abacab
+
+[0,0,1,0,1,2]
+		  
+abacaabaccabacabacab
+abacab
+
+abacaabaccabacabacab
+    abacab
+
+abacaabaccabacabacab
+     abacab	
+	 
+abacaabaccabacabacab
+         abacab	
+
+abacaabaccabacabacab
+          abacab
+
+
+-----
+
+abacaabaccabacabacab
+           abacab		  
+
+abacaabaccabacabacab
+              abacab
+			  
+-----
+
+
+
+
+AACAADAACDCECDCECDCACDC
+CDCECDC
+
+AACAADAACDCECDCECDCACDC
+  CDCECDC
+
+AACAADAACDCECDCECDCACDC
+   CDCECDC
+
+AACAADAACDCECDCECDCACDC
+        CDCECDC
+
+AACAADAACDCECDCECDCACDC
+            CDCECDC
+
+AACAADAACDCECDCECDCACDC
+                CDCECDC
+
+
+CDCECDC
+[0,0,1,0,1,2,3]
+
+
+
+
+CECDCEDCCDCECDCCDC
+CDCECDC
+
+CECDCEDCCDCECDCCDC
+ CDCECDC
+
+ 
+012345678 
+CECDCEDCCDCECDCCDC
+  CDCECDC
+      .
+CECDCEDCCDCECDCCDC
+      CDCECDC 
+
+CECDCEDCCDCECDCCDC
+       CDCECDC
+
+CECDCEDCCDCECDCCDC
+        CDCECDC
+
+CECDCEDCCDCECDCCDC
+           CDCECDC
+
+ */
