@@ -9,7 +9,7 @@
             string pattern = "abacab";
             
             Console.WriteLine("匹配位置:");
-            method.BoyerMooreSearch(target, pattern);
+            //method.BoyerMooreSearch(target, pattern);
         }
     }
 
@@ -25,44 +25,85 @@
             
         }
 
-        public void BadCharHeuristic(string pattern, int[] badChar)
+        /// <summary>
+        /// 1. 第一種方式：壞字符表
+        /// </summary>
+        public class BadCharacterExample
         {
-            int strLength = pattern.Length;
-            for (int index = 0; index < 256; index++)
-                badChar[index] = -1;
-
-            for (int index = 0; index < strLength; index++)
-                badChar[(int)pattern[index]] = index;
-        }
-
-        public void BoyerMooreSearch(string text, string pattern)
-        {
-            int searchLength = pattern.Length;
-            int textLength = text.Length;
-
-            int[] badChar = new int[256];
-            BadCharHeuristic(pattern, badChar);
-
-            int moveIndex = 0; // text 中的起始位置
-
-            while (moveIndex <= textLength - searchLength)
+            private int[] badCharacterTable;
+            private readonly int ALPHABET_SIZE = 256;
+            private string pattern;
+            public BadCharacterExample(string text, string pattern)
             {
-                int caculateIndex = searchLength - 1;
+                this.pattern = pattern;
+                badCharacterTable = BuildBadCharacterTable(pattern);
+            }
 
-                // 從右到左比對 pattern 和 text
-                while (caculateIndex >= 0 && pattern[caculateIndex] == text[moveIndex + caculateIndex])
-                    caculateIndex--;
+            private int[] BuildBadCharacterTable(string pattern)
+            {
+                int m = pattern.Length;
+                int[] table = new int[ALPHABET_SIZE];
 
-                if (caculateIndex < 0)
+                for (int i = 0; i < ALPHABET_SIZE; i++)
+                    table[i] = -1;
+
+                for (int i = 0; i < m; i++)
+                    table[(int)pattern[i]] = i;
+
+                return table;
+            }
+
+            public int Search(string text)
+            {
+                int n = text.Length;
+                int m = pattern.Length;
+                int s = 0; // s is the shift of the pattern with respect to text
+
+                while (s <= (n - m))
                 {
-                    Console.WriteLine($"Pattern 出現在位置 {moveIndex}");
-                    moveIndex += (moveIndex + searchLength < textLength) ? searchLength - badChar[text[moveIndex + searchLength]] : 1;
+                    int j = m - 1;
+
+                    while (j >= 0 && pattern[j] == text[s + j])
+                        j--;
+
+                    if (j < 0)
+                    {
+                        return s; // Pattern found at index s
+                        s += (s + m < n) ? m - badCharacterTable[text[s + m]] : 1;
+                    }
+                    else
+                    {
+                        s += Math.Max(1, j - badCharacterTable[text[s + j]]);
+                    }
                 }
-                else
+
+                return -1; // Pattern not found
+            }
+
+            public void PrintBadCharacterTable()
+            {
+                for (int i = 0; i < ALPHABET_SIZE; i++)
                 {
-                    moveIndex += Math.Max(1, caculateIndex - badChar[text[moveIndex + caculateIndex]]);
+                    if (badCharacterTable[i] != -1)
+                        Console.WriteLine($"Char {((char)i)}: {badCharacterTable[i]}");
                 }
             }
+        }
+
+        /// <summary>
+        /// 2. 第二種方式：好後綴表
+        /// </summary>
+        public class GoodSuffixExample
+        {
+
+        }
+
+        /// <summary>
+        /// 3. 第三種方式：混合法
+        /// </summary>
+        public class BoyerMooreExample
+        {
+
         }
     }
 }
