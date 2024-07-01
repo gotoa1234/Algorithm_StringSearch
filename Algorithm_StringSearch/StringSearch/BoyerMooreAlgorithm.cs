@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Algorithm_StringSearch.StringSearch
+﻿namespace Algorithm_StringSearch.StringSearch
 {
     public class BoyerMooreAlgorithmExecute
     {
@@ -13,13 +7,9 @@ namespace Algorithm_StringSearch.StringSearch
             var method = new BoyerMooreAlgorithm();
             string target = "abacaabaccabacabacab";
             string pattern = "abacab";
-            List<int> matchPositions = new List<int>();//method.BoyerMooreSearch(target, pattern);
-
+            
             Console.WriteLine("匹配位置:");
-            foreach (int pos in matchPositions)
-            {
-                Console.WriteLine(pos);
-            }
+            method.BoyerMooreSearch(target, pattern);
         }
     }
 
@@ -35,78 +25,44 @@ namespace Algorithm_StringSearch.StringSearch
             
         }
 
-        private int[] BuildBadCharacterTable(string pattern)
+        public void BadCharHeuristic(string pattern, int[] badChar)
         {
-            int m = pattern.Length;
-            int[] table = new int[ALPHABET_SIZE];
+            int strLength = pattern.Length;
+            for (int index = 0; index < 256; index++)
+                badChar[index] = -1;
 
-            for (int i = 0; i < ALPHABET_SIZE; i++)
-                table[i] = -1;
-
-            for (int i = 0; i < m - 1; i++)
-                table[(int)pattern[i]] = i;
-
-            return table;
+            for (int index = 0; index < strLength; index++)
+                badChar[(int)pattern[index]] = index;
         }
 
-        private int[] BuildGoodSuffixTable(string pattern)
+        public void BoyerMooreSearch(string text, string pattern)
         {
-            int m = pattern.Length;
-            int[] table = new int[m];
-            int[] borderPosition = new int[m + 1];
-            int i = m, j = m + 1;
-            borderPosition[i] = j;
+            int searchLength = pattern.Length;
+            int textLength = text.Length;
 
-            while (i > 0)
+            int[] badChar = new int[256];
+            BadCharHeuristic(pattern, badChar);
+
+            int moveIndex = 0; // text 中的起始位置
+
+            while (moveIndex <= textLength - searchLength)
             {
-                while (j <= m && pattern[i - 1] != pattern[j - 1])
+                int caculateIndex = searchLength - 1;
+
+                // 從右到左比對 pattern 和 text
+                while (caculateIndex >= 0 && pattern[caculateIndex] == text[moveIndex + caculateIndex])
+                    caculateIndex--;
+
+                if (caculateIndex < 0)
                 {
-                    if (table[j] == 0) table[j] = j - i;
-                    j = borderPosition[j];
-                }
-                i--;
-                j--;
-                borderPosition[i] = j;
-            }
-
-            j = borderPosition[0];
-            for (i = 0; i <= m; i++)
-            {
-                if (table[i] == 0) table[i] = j;
-                if (i == j) j = borderPosition[j];
-            }
-
-            return table;
-        }
-
-        public int BoyerMooreSearch(string text, string pattern)
-        {
-             int[] badCharacterTable = new int[200];
-             int[] goodSuffixTable;
-
-            int n = text.Length;
-            int m = pattern.Length;
-            int s = 0; // s is the shift of the pattern with respect to text
-
-            while (s <= (n - m))
-            {
-                int j = m - 1;
-
-                while (j >= 0 && pattern[j] == text[s + j])
-                    j--;
-
-                if (j < 0)
-                {
-                    return s;
-                    s += (s + m < n) ? m - badCharacterTable[text[s + m]] : 1;
+                    Console.WriteLine($"Pattern 出現在位置 {moveIndex}");
+                    moveIndex += (moveIndex + searchLength < textLength) ? searchLength - badChar[text[moveIndex + searchLength]] : 1;
                 }
                 else
                 {
-                    s += Math.Max(1, j - badCharacterTable[text[s + j]]);
+                    moveIndex += Math.Max(1, caculateIndex - badChar[text[moveIndex + caculateIndex]]);
                 }
             }
-
-            return -1;
         }
     }
 }
