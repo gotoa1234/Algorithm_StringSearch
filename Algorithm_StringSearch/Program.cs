@@ -2,11 +2,15 @@
 using Algorithm_StringSearch.StringSearch;
 
 // 1. Rabin-Karp Algorithm
-var temp = new RabinKarpAlgorithmExecute();
-temp.Execute();
+var alRabinKarp = new RabinKarpAlgorithmExecute();
+alRabinKarp.Execute();
 
 // 2. KMP Algorithm
-var temp2 = new KMPAlgorithmExecute();
-temp2.Execute();
+var alKMP = new KMPAlgorithmExecute();
+alKMP.Execute();
+
+// 3. Boyer Moore Algorithm
+var alBoyerMoore = new BoyerMooreAlgorithmExecute();
+alBoyerMoore.Execute();
 
 Console.WriteLine("Wait a minute.");
