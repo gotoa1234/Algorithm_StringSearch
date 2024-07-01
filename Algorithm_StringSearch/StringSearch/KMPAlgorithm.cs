@@ -2,14 +2,24 @@
 {
     public class KMPAlgorithmExecute
     {
+        /// <summary>
+        /// KMP 字串搜尋演算法 - 進入點
+        /// </summary>
         public void Execute()
         {
             var method = new KMPAlgorithm();
-            string target = "abacaabaccabacabacab";
-            string pattern = "abacab";
-            List<int> matchPositions = method.KMPSearch(target, pattern);
-
-            Console.WriteLine("匹配位置:");
+            string target1 = "CECDCEDCCDCECDCCDC";
+            string target2 = "AACAADAACDCECDCECDCACDC";
+            string pattern = "CDCECDC";
+            List<int> matchPositions = method.KMPSearch(target1, pattern);
+            Console.WriteLine($"文本：{target1} 匹配位置:");            
+            foreach (int pos in matchPositions)
+            {
+                Console.WriteLine(pos);
+            }
+            Console.WriteLine("");
+            Console.WriteLine($"文本：{target2} 匹配位置:");
+            matchPositions = method.KMPSearch(target2, pattern);
             foreach (int pos in matchPositions)
             {
                 Console.WriteLine(pos);
@@ -25,7 +35,7 @@
         }
 
         /// <summary>
-        /// 1. 計算部分匹配表
+        /// 2. 計算部分匹配表 (正式名稱：失配函式)
         /// </summary>       
         public int[] ComputePrefixFunction(string pattern)
         {            
@@ -58,9 +68,9 @@
         /// </summary>                
         public List<int> KMPSearch(string targetStr, string patternStr)
         {
+            // 1. 建構變數
             int tragetLength = targetStr.Length;
             int patternLength = patternStr.Length;
-            // 1. 計算本次查詢字串的匹配表
             var matchTable = ComputePrefixFunction(patternStr);
             int currentIndex = 0;// 當前匹配的位置
             var resultMatch = new List<int>();
@@ -93,7 +103,4 @@
             return resultMatch;
         }
     }
-
-
-
 }
