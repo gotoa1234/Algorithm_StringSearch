@@ -60,10 +60,11 @@
 
                 //1-4. 開始搜尋
                 int currentIndex = 0;// 起始位置
+                int moveIndex = 0;
                 while (currentIndex <= (n - m))// 不可超過最大長度
                 {
                     //1-5. 從後往前比對
-                    int moveIndex = m - 1;
+                    moveIndex = m - 1;
 
                     // 1-6. 若有不同，則移動到壞字元表的位置
                     while (moveIndex >= 0 && pattern[moveIndex] == text[currentIndex + moveIndex])
@@ -95,65 +96,78 @@
                 Console.WriteLine();
             }
 
+            /// <summary>
+            /// 2-2-2.  當模式串中部分後綴匹配文本串時的情況。這有助於在失敗匹配時確定模式串應該向前移動多少
+            /// </summary>
             private void PreprocessStrongSuffix(int[] shift, int[] bpos, string patten)
             {
                 int pattenLength = patten.Length;
                 int index = pattenLength;
-                int j = pattenLength + 1;
-                bpos[index] = j;
+                int currentIndex = pattenLength + 1;// 索引最右邊開始
+                bpos[index] = currentIndex;
                 while (index > 0)
                 {
-                    while (j <= pattenLength && patten[index - 1] != patten[j - 1])
+                    while (currentIndex <= pattenLength && 
+                           patten[index - 1] != patten[currentIndex - 1])
                     {
-                        if (shift[j] == 0)
-                            shift[j] = j - index;
-                        j = bpos[j];
+                        if (shift[currentIndex] == 0)
+                            shift[currentIndex] = currentIndex - index;
+                        currentIndex = bpos[currentIndex];
                     }
-                    index--; j--;
-                    bpos[index] = j;
+                    index--; currentIndex--;
+                    bpos[index] = currentIndex;
                 }
             }
 
+            /// <summary>
+            /// 2-3-2. 計算出可跳過的位置數
+            /// </summary>
             private void PreprocessCase2(int[] shift, int[] bpos, int m)
             {
-                int i, j;
-                j = bpos[0];
-                for (i = 0; i <= m; i++)
+                int index, moveIndex;
+                moveIndex = bpos[0];
+                for (index = 0; index <= m; index++)
                 {
-                    if (shift[i] == 0)
-                        shift[i] = j;
-                    if (i == j)
-                        j = bpos[j];
+                    if (shift[index] == 0)
+                        shift[index] = moveIndex;
+                    if (index == moveIndex)
+                        moveIndex = bpos[moveIndex];
                 }
             }
 
+            /// <summary>
+            /// 2-1. 執行演算法 - 搜尋指定字串
+            /// </summary>
             private void Search(string text, string pattern)
             {
                 int currentIndex = 0, moveIndex = 0;
                 int m = pattern.Length;
                 int n = text.Length;
 
-                int[] bpos = new int[m + 1];
-                int[] shift = new int[m + 1];
+                int[] bpos = new int[m + 1];//用於記錄模式串中每個位置的下一個可能的後綴位置
+                int[] shift = new int[m + 1];//用於記錄強後綴匹配失敗時應該跳過的位置數量
 
-                for (int i = 0; i < m + 1; i++) shift[i] = 0;
-
-                PreprocessStrongSuffix(shift, bpos, pattern, m);
+                // 2-2-1. 紀錄每個位置的下一個可能的後綴位置
+                PreprocessStrongSuffix(shift, bpos, pattern);
+                // 2-3-1. 計算出可跳過的位置數
                 PreprocessCase2(shift, bpos, m);
 
                 while (currentIndex <= n - m)
                 {
+                    // 2-4. 從後往前比對
                     moveIndex = m - 1;
-
+                    
+                    // 2-5. 逐步匹配
                     while (moveIndex >= 0 && pattern[moveIndex] == text[currentIndex + moveIndex])
                         moveIndex--;
 
-                    if (moveIndex < 0)
+                    // 2-6. 找到時紀錄
+                    if (moveIndex == -1)
                     {
                         Console.WriteLine("Pattern occurs at index " + currentIndex);
                         currentIndex += shift[0];
                     }
-                    else
+                    else// 2-7. 未找到時使用好後綴表跳過對應位置數
                         currentIndex += shift[moveIndex + 1];
                 }
             }
