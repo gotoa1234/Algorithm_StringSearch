@@ -186,6 +186,9 @@
                 Console.WriteLine();
             }
 
+            /// <summary>
+            /// 建立壞字元表
+            /// </summary>            
             private Dictionary<char, int> BadCharHeuristic(string pattern)
             {
                 var result = new Dictionary<char, int>();
@@ -194,67 +197,236 @@
                 return result;
             }
 
-            private void PreprocessStrongSuffix(int[] shift, int[] bpos, string pat, int m)
+            /// <summary>
+            /// 當模式串中部分後綴匹配文本串時的情況。這有助於在失敗匹配時確定模式串應該向前移動多少
+            /// </summary>
+            private void PreprocessStrongSuffix(int[] shift, int[] bpos, string patten)
             {
-                int i = m, j = m + 1;
-                bpos[i] = j;
-                while (i > 0)
+                int pattenLength = patten.Length;
+                int index = pattenLength;
+                int currentIndex = pattenLength + 1;// 索引最右邊開始
+                bpos[index] = currentIndex;
+                while (index > 0)
                 {
-                    while (j <= m && pat[i - 1] != pat[j - 1])
+                    while (currentIndex <= pattenLength &&
+                           patten[index - 1] != patten[currentIndex - 1])
                     {
-                        if (shift[j] == 0)
-                            shift[j] = j - i;
-                        j = bpos[j];
+                        if (shift[currentIndex] == 0)
+                            shift[currentIndex] = currentIndex - index;
+                        currentIndex = bpos[currentIndex];
                     }
-                    i--; j--;
-                    bpos[i] = j;
+                    index--; currentIndex--;
+                    bpos[index] = currentIndex;
                 }
             }
 
+            /// <summary>
+            /// 計算出可跳過的位置數
+            /// </summary>
             private void PreprocessCase2(int[] shift, int[] bpos, int m)
             {
-                int i, j;
-                j = bpos[0];
-                for (i = 0; i <= m; i++)
+                int index, moveIndex;
+                moveIndex = bpos[0];
+                for (index = 0; index <= m; index++)
                 {
-                    if (shift[i] == 0)
-                        shift[i] = j;
-                    if (i == j)
-                        j = bpos[j];
+                    if (shift[index] == 0)
+                        shift[index] = moveIndex;
+                    if (index == moveIndex)
+                        moveIndex = bpos[moveIndex];
                 }
             }
 
+            /// <summary>
+            /// 3-1. 執行演算法 - 搜尋指定字串
+            /// </summary>
             public void Search(string text, string pattern)
             {
                 int m = pattern.Length;
                 int n = text.Length;
                 
                 int[] bpos = new int[m + 1];
-                int[] shift = new int[m + 1];
+                int[] shift = new int[m + 1];               
 
-                for (int i = 0; i < m + 1; i++) shift[i] = 0;
-
+                // 3-2. 找出壞字元表
                 var badchar = BadCharHeuristic(pattern);
-                PreprocessStrongSuffix(shift, bpos, pattern, m);
+                
+                // 3-3. 找出好後綴表
+                PreprocessStrongSuffix(shift, bpos, pattern);
                 PreprocessCase2(shift, bpos, m);
 
-                int s = 0;
-                while (s <= (n - m))
+                int currentIndex = 0;
+                while (currentIndex <= (n - m))
                 {
-                    int j = m - 1;
+                    int moveIndex = m - 1;
 
-                    while (j >= 0 && pattern[j] == text[s + j])
-                        j--;
+                    while (moveIndex >= 0 && pattern[moveIndex] == text[currentIndex + moveIndex])
+                        moveIndex--;
 
-                    if (j < 0)
+                    if (moveIndex < 0)
                     {
-                        Console.WriteLine("Pattern occurs at index " + s);
-                        s += shift[0];
+                        Console.WriteLine("Pattern occurs at index " + currentIndex);
+                        currentIndex += shift[0];
                     }
                     else
-                        s += Math.Max(shift[j + 1], j - badchar.GetValueOrDefault(text[s + j], -1));
+                    {
+                        // 3-4. 使用壞字元表與好後綴表，查詢出最大移動位置
+                        currentIndex += Math.Max(shift[moveIndex + 1], moveIndex - badchar.GetValueOrDefault(text[currentIndex + moveIndex], -1));
+                    }
                 }
             }
         }
     }
 }
+
+
+/*  1. 只用壞字元表演練
+    string text = "HERE IS A SIMPLE EXAMPLE";
+    string pattern = "EXAMPLE";
+	
+ badChar = [6, 1, 2, 3, 4, 5]
+            E  X  A  M  P  L  E
+位移索引最大值 : 6 (Pattern長度 - 1) 
+		
+Step 1: 
+T:	HERE IS A SIMPLE EXAMPLE
+P:  EXAMPLE
+得到 S 與 E 不一致 查詢文本 S 對應的 badChar 不存在所以下一次位移 6 + 1 所以 7
+
+
+Step 2:
+T:	HERE IS A SIMPLE EXAMPLE
+P:         EXAMPLE
+得到 P 與 E 不一致 查詢文本 P 對應的 badChar 存在是 4 所以下一次位移是 (6 - 4) = 2
+
+
+Step 3:
+T:	HERE IS A SIMPLE EXAMPLE
+P:           EXAMPLE
+得到 I 與 A 不一致 查詢文本 I 對應的 badChar 不存在所以下一次位移是 2 + 1 所以 3
+
+
+Step 4:
+T:	HERE IS A SIMPLE EXAMPLE
+P:              EXAMPLE
+得到 X 與 E 不一致 查詢文本 X 對應的 badChar 存在是 1 所以下一次位移是 (6 - 1) 所以 5
+
+
+
+Step 5:
+T:	HERE IS A SIMPLE EXAMPLE
+P:                   EXAMPLE
+得到全一致，已經無法在往下走了，所以跳出
+
+ */
+
+
+
+/*  2. 只用好後綴表演練
+    string text = "HERE IS A SIMPLE EXAMPLE";
+    string pattern = "EXAMPLE";
+	
+ bpos = [6, 7, 7, 7, 7, 7, 7, 8]
+shift = [6, 6, 6, 6, 6, 6, 6, 1]
+            E  X  A  M  P  L  E
+			
+Step 1: 
+T:	HERE IS A SIMPLE EXAMPLE
+P:  EXAMPLE
+得到 S 與 E 不一致 shift[7] 為 1 所以下一次位移 1 
+
+
+Step 2:
+T:	HERE IS A SIMPLE EXAMPLE
+P:   EXAMPLE
+得到 ' ' 與 E 不一致 shift[7] 為 1 所以下一次位移 1 
+
+
+Step 3:
+T:	HERE IS A SIMPLE EXAMPLE
+P:    EXAMPLE
+得到 A 與 E 不一致 shift[7] 為 1 所以下一次位移 1 
+
+
+Step 4:
+T:	HERE IS A SIMPLE EXAMPLE
+P:     EXAMPLE
+得到 ' ' 與 E 不一致 shift[7] 為 1 所以下一次位移 1
+
+
+Step 5:
+T:	HERE IS A SIMPLE EXAMPLE
+P:     EXAMPLE
+得到 ' ' 與 E 不一致 shift[7] 為 1 所以下一次位移 1
+
+
+Step 6 - 11:
+T:	HERE IS A SIMPLE EXAMPLE
+P:           EXAMPLE
+得到 A 與 I 不一致 shift[3] 為 6 所以下一次位移 6
+
+
+Step 12:
+T:	HERE IS A SIMPLE EXAMPLE
+P:                 EXAMPLE
+得到 P 與 E 不一致 shift[7] 為 1 所以下一次位移 1
+
+
+Step 13:
+T:	HERE IS A SIMPLE EXAMPLE
+P:                  EXAMPLE
+得到 L 與 E 不一致 shift[7] 為 1 所以下一次位移 1
+
+
+Step 14:
+T:	HERE IS A SIMPLE EXAMPLE
+P:                   EXAMPLE
+得到全一致 shift[0] 為 1 所以下一次位移 6 但是已經走到底了，所以跳出
+
+ 
+ */
+
+/* 3. 壞字元表與好後綴表混合演練
+       string text = "HERE IS A SIMPLE EXAMPLE";
+    string pattern = "EXAMPLE";
+	
+ badChar = [6, 1, 2, 3, 4, 5]                
+   shift = [6, 6, 6, 6, 6, 6, 6, 1]
+            E  X  A  M  P  L  E			
+			
+永遠位移索引最大值 : 6 (Pattern長度 - 1) 
+		
+			
+Step 1: 
+T:	HERE IS A SIMPLE EXAMPLE
+P:  EXAMPLE
+壞字元：得到 S 與 E 不一致 查詢文本 S 對應的 badChar 不存在所以下一次位移 6 + 1 所以 7
+好後綴：得到 S 與 E 不一致 shift[7] 為 1 所以下一次位移 1 
+7 跟 1 取大的位移所以下一次位移 7 (使用壞字元位移)
+
+Step 2:
+T:	HERE IS A SIMPLE EXAMPLE
+P:         EXAMPLE
+壞字元：得到 P 與 E 不一致 查詢文本 P 對應的 badChar 存在是 4 所以下一次位移是 (6 - 4) = 2
+好後綴：得到 P 與 E 不一致 shift[7] 為 1 所以下一次位移 1 
+2 跟 1 取大的位移所以下一次位移 2 (使用壞字元位移)
+
+Step 3:
+T:	HERE IS A SIMPLE EXAMPLE
+P:           EXAMPLE
+壞字元：得到 I 與 A 不一致 查詢文本 I 對應的 badChar 不存在所以下一次位移是 2 + 1 所以 3
+好後綴：得到 I 與 A 不一致 shift[3] 為 6 所以下一次位移 6
+3 跟 6 取大的位移所以下一次位移 6 (使用好後綴位移)
+
+Step 4:
+T:	HERE IS A SIMPLE EXAMPLE
+P:                 EXAMPLE
+壞字元：得到 P 與 E 不一致 查詢文本 P 對應的 badChar 存在是 4 所以下一次位移是 (6 - 4) = 2
+好後綴：得到 P 與 E 不一致 shift[6] 為 1 所以下一次位移 1
+2 跟 1 取大的位移所以下一次位移 2 (使用壞字元位移)
+
+Step 5:
+T:	HERE IS A SIMPLE EXAMPLE
+P:                   EXAMPLE
+得到全一致，已經無法在往下走了，所以跳出
+
+ */
