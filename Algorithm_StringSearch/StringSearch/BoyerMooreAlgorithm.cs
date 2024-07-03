@@ -180,7 +180,7 @@
         {
             public BoyerMooreExample(string text, string pattern)
             {
-                Console.WriteLine("2. 第三種方式：混合法 (完整最基本版本的 Boyer-Moore)");
+                Console.WriteLine("3. 第三種方式：混合法 (完整最基本版本的 Boyer-Moore)");
                 Search(text, pattern);
                 Console.WriteLine();
                 Console.WriteLine();
