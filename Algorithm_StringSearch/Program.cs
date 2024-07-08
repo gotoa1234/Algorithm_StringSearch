@@ -19,4 +19,11 @@ Console.WriteLine("====");
 var alBoyerMoore = new BoyerMooreAlgorithmExecute();
 alBoyerMoore.Execute();
 
+
+Console.WriteLine("====");
+
+// 4. Finite State Machine Algorithm
+var alFST = new FiniteStateMachineAlgorithmExecute();
+alFST.Execute();
+
 Console.WriteLine("Wait a minute.");
