@@ -1,84 +1,147 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Algorithm_StringSearch.StringSearch
+﻿namespace Algorithm_StringSearch.StringSearch
 {
     public class FiniteStateMachineAlgorithmExecute
     {
         public void Execute()
         {
-            string text = "HERE IS A SIMPLE EXAMPLE";
+            string text = "HERE IS A SIMPLE EXAMPLE ";
             string pattern = "EXAMPLE";
-            var fsm = new FiniteStateMachineAlgorithm();
 
-            bool patternFound = fsm.FiniteStateMachineAlgoritSearch(text, pattern);
-
-            if (patternFound)
-            {
-                Console.WriteLine("文本中找到了模式！");
-            }
-            else
-            {
-                Console.WriteLine("文本中没有找到模式。");
-            }
+            new FiniteStateMachineAlgorithm.FiniteStateMachineOrigineArrayExample(text, pattern);
+            new FiniteStateMachineAlgorithm.FiniteStateMachineHashExample(text, pattern);
         }
     }
 
     public class FiniteStateMachineAlgorithm
     {
-        public FiniteStateMachineAlgorithm()
+        /// <summary>
+        /// 傳統方法：用陣列做狀態轉移表
+        /// 空間複雜度：O(m * |Σ|) (m: 模式長度, |Σ|: 字元集大小)
+        /// </summary>
+        public class FiniteStateMachineOrigineArrayExample
         {
-               
-        }
-
-        public int[,] InitialPatternPreProcess(string pattern)
-        {
-            int statesCount = pattern.Length + 1; // 状态数量等于模式长度加一
-            int alphabetSize = 256; // 假设字符集大小为ASCII字符集的大小
-
-            // 初始化状态转移表
-            var transitionTable = new int[statesCount, alphabetSize];
-
-            // 构建状态转移表
-            for (int state = 0; state < statesCount; state++)
+            public FiniteStateMachineOrigineArrayExample(string text, string pattern)
             {
-                for (int c = 0; c < alphabetSize; c++)
+                Console.WriteLine(" Hash 用陣列做狀態轉移表 ");
+
+                var patternFound = this.FiniteStateMachineAlgoritSearch(text, pattern);
+                if (patternFound)
                 {
-                    // 默认转移到初始状态
-                    transitionTable[state, c] = 0;
+                    Console.WriteLine("文本中[找到了]模式！");
+                }
+                else
+                {
+                    Console.WriteLine("文本中[沒有找到]模式。");
                 }
             }
 
-            // 根据模式构建状态转移表
-            for (int state = 0; state < pattern.Length; state++)
+            /// <summary>
+            /// 3. 建立 Array[] 的狀態移轉表
+            /// </summary>        
+            public int[,] InitialPatternPreProcess(string pattern)
             {
-                transitionTable[state, pattern[state]] = state + 1;
+                int statesCount = pattern.Length + 1;//狀態數量 = 模式長度 + 1
+                int alphabetSize = 256; // 假設現在比對為 Ascii 碼
+
+                // 3-1. 初始化狀態轉移表
+                var transitionTable = new int[statesCount, alphabetSize];
+
+                // 3-2. 賦值狀態轉移資料
+                for (int state = 0; state < pattern.Length; state++)
+                {
+                    transitionTable[state, pattern[state]] = state + 1;
+                }
+                return transitionTable;
             }
 
-            return transitionTable;
+            /// <summary>
+            /// 1. 執行演算法 - 搜尋字串
+            /// </summary>        
+            public bool FiniteStateMachineAlgoritSearch(string text, string pattern)
+            {
+                // 2. 初始化狀態轉移表
+                var transitionTable = this.InitialPatternPreProcess(pattern);
+
+                // 4. 搜尋字串
+                var currentState = 0;
+                for (int index = 0; index < text.Length; index++)
+                {
+                    currentState = transitionTable[currentState, text[index]];
+
+                    // 4-1. 找到匹配 - 當前狀態達到最終狀態（模式長度）
+                    if (currentState == pattern.Length)
+                    {
+                        return true;
+                    }
+                }
+
+                // 4-2. 沒找到 - 當前狀態未達到最終狀態
+                return false;
+            }
         }
 
-        public bool FiniteStateMachineAlgoritSearch(string text, string pattern)
+        /// <summary>
+        /// 優化方法：用 Hash 做狀態轉移表
+        /// 空間複雜度：O(m) (m: 模式長度)
+        /// </summary>
+        public class FiniteStateMachineHashExample
         {
-            var transitionTable = this.InitialPatternPreProcess(pattern);
-            var currentState = 0;
-
-            for (int i = 0; i < text.Length; i++)
+            public FiniteStateMachineHashExample(string text, string pattern)
             {
-                currentState = transitionTable[currentState, text[i]];
-
-                // 如果当前状态达到最终状态（模式长度），则找到了匹配
-                if (currentState == pattern.Length)
+                Console.WriteLine(" Hash 做狀態轉移表 ");
+                var patternFound = this.FiniteStateMachineAlgoritSearch(text, pattern);
+                if (patternFound)
                 {
-                    return true;
+                    Console.WriteLine("文本中[找到了]模式！");
+                }
+                else
+                {
+                    Console.WriteLine("文本中[沒有找到]模式。");
                 }
             }
 
-            // 在文本中没有找到完整的模式
-            return false;
+            /// <summary>
+            /// 3. 建立 Hash 的狀態移轉表
+            /// </summary>        
+            public Dictionary<int, int> InitialPatternPreProcess(string pattern)
+            {                         
+                // 3-1. 初始化狀態轉移表
+                var transitionTable = new Dictionary<int, int>();
+
+                // 3-2. 賦值狀態轉移資料
+                for (int state = 0; state < pattern.Length; state++)
+                {
+                    transitionTable.Add(state, pattern[state]);
+                }
+                return transitionTable;
+            }
+
+            /// <summary>
+            /// 1. 執行演算法 - 搜尋字串
+            /// </summary>        
+            public bool FiniteStateMachineAlgoritSearch(string text, string pattern)
+            {
+                // 2. 初始化狀態轉移表
+                var transitionTable = this.InitialPatternPreProcess(pattern);
+
+                // 4. 搜尋字串
+                var currentState = 0;
+                for (int index = 0; index < text.Length; index++)
+                {
+                    currentState = transitionTable[currentState] == text[index] 
+                                   ? currentState + 1 
+                                   : 0;                    
+
+                    // 4-1. 找到匹配 - 當前狀態達到最終狀態（模式長度）
+                    if (currentState == pattern.Length)
+                    {
+                        return true;
+                    }
+                }
+
+                // 4-2. 沒找到 - 當前狀態未達到最終狀態
+                return false;
+            }
         }
     }
 }

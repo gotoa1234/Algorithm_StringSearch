@@ -399,29 +399,29 @@ P:                   EXAMPLE
 Step 1: 
 T:	HERE IS A SIMPLE EXAMPLE
 P:  EXAMPLE
-壞字元：得到 S 與 E 不一致 查詢文本 S 對應的 badChar 不存在所以下一次位移 6 + 1 所以 7
-好後綴：得到 S 與 E 不一致 shift[7] 為 1 所以下一次位移 1 
+【壞字元】：得到 S 與 E 不一致 查詢文本 S 對應的 badChar 不存在所以下一次位移 6 + 1 所以 7
+【好後綴】：得到 S 與 E 不一致 shift[7] 為 1 所以下一次位移 1 
 7 跟 1 取大的位移所以下一次位移 7 (使用壞字元位移)
 
 Step 2:
 T:	HERE IS A SIMPLE EXAMPLE
 P:         EXAMPLE
-壞字元：得到 P 與 E 不一致 查詢文本 P 對應的 badChar 存在是 4 所以下一次位移是 (6 - 4) = 2
-好後綴：得到 P 與 E 不一致 shift[7] 為 1 所以下一次位移 1 
+【壞字元】：得到 P 與 E 不一致 查詢文本 P 對應的 badChar 存在是 4 所以下一次位移是 (6 - 4) = 2
+【好後綴】：得到 P 與 E 不一致 shift[7] 為 1 所以下一次位移 1 
 2 跟 1 取大的位移所以下一次位移 2 (使用壞字元位移)
 
 Step 3:
 T:	HERE IS A SIMPLE EXAMPLE
 P:           EXAMPLE
-壞字元：得到 I 與 A 不一致 查詢文本 I 對應的 badChar 不存在所以下一次位移是 2 + 1 所以 3
-好後綴：得到 I 與 A 不一致 shift[3] 為 6 所以下一次位移 6
+【壞字元】：得到 I 與 A 不一致 查詢文本 I 對應的 badChar 不存在所以下一次位移是 2 + 1 所以 3
+【好後綴】：得到 I 與 A 不一致 shift[3] 為 6 所以下一次位移 6
 3 跟 6 取大的位移所以下一次位移 6 (使用好後綴位移)
 
 Step 4:
 T:	HERE IS A SIMPLE EXAMPLE
 P:                 EXAMPLE
-壞字元：得到 P 與 E 不一致 查詢文本 P 對應的 badChar 存在是 4 所以下一次位移是 (6 - 4) = 2
-好後綴：得到 P 與 E 不一致 shift[6] 為 1 所以下一次位移 1
+【壞字元】：得到 P 與 E 不一致 查詢文本 P 對應的 badChar 存在是 4 所以下一次位移是 (6 - 4) = 2
+【好後綴】：得到 P 與 E 不一致 shift[6] 為 1 所以下一次位移 1
 2 跟 1 取大的位移所以下一次位移 2 (使用壞字元位移)
 
 Step 5:
