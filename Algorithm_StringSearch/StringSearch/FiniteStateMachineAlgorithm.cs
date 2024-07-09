@@ -7,6 +7,9 @@
             string text = "HERE IS A SIMPLE EXAMPLE ";
             string pattern = "EXAMPLE";
 
+            text = "AAAB ";
+            pattern = "AAB";
+
             new FiniteStateMachineAlgorithm.FiniteStateMachineOrigineArrayExample(text, pattern);
             new FiniteStateMachineAlgorithm.FiniteStateMachineHashExample(text, pattern);
         }
@@ -22,7 +25,7 @@
         {
             public FiniteStateMachineOrigineArrayExample(string text, string pattern)
             {
-                Console.WriteLine(" Hash 用陣列做狀態轉移表 ");
+                Console.WriteLine(" 陣列 做狀態轉移表 ");
 
                 var patternFound = this.FiniteStateMachineAlgoritSearch(text, pattern);
                 if (patternFound)
@@ -49,9 +52,45 @@
                 // 3-2. 賦值狀態轉移資料
                 for (int state = 0; state < pattern.Length; state++)
                 {
-                    transitionTable[state, pattern[state]] = state + 1;
+                    //transitionTable[state, pattern[state]] = GetNextState(pattern, state, pattern[state]);
+                    for (char c = (char)0; c < alphabetSize; c++)
+                    {
+                        var getState = GetNextState(pattern, state, c);
+                        transitionTable[state, c] = getState;
+                    }
+                    //transitionTable[state, pattern[state]] = state + 1;
                 }
                 return transitionTable;
+            }
+
+            private int GetNextState(string pattern, int state, char c)
+            {
+                // 完全匹配
+                if (state < pattern.Length && c == pattern[state])
+                {
+                    return state + 1;
+                }
+
+                // 部分匹配
+                for (int ns = state; ns > 0; ns--)
+                {
+                    // 找到最長的部分匹配
+                    if (pattern[ns - 1] == c)
+                    {
+                        // 檢查是否為部分匹配
+                        // pattern[0] 開始到 pattern[ns - 1] 為部分匹配
+                        for (int index = 0; index < ns - 1; index++)
+                        {
+                            if (pattern[index] != pattern[state - ns + 1 + index])
+                            {
+                                return 0;
+                            }
+                        }
+                        return ns;                        
+                    }
+                }
+
+                return 0;
             }
 
             /// <summary>
