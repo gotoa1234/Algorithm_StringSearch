@@ -4,15 +4,28 @@
     {
         public void Execute()
         {
+
+            //Example 1 :
             string text = "HERE IS A SIMPLE EXAMPLE ";
             string pattern = "EXAMPLE";
+            new FiniteStateMachineAlgorithm.FiniteStateMachineOrigineArrayExample(text, pattern);
+            new FiniteStateMachineAlgorithm.FiniteStateMachineHashExample(text, pattern);
 
+            //Example 2 :
+            text = "我的世世世界 ";
+            pattern = "世世界";
+            //new FiniteStateMachineAlgorithm.FiniteStateMachineOrigineArrayExample(text, pattern);//不支援中文
+            new FiniteStateMachineAlgorithm.FiniteStateMachineHashExample(text, pattern);
+
+            //Example 3 :
+            text = "AAACB ";
+            pattern = "AAB";
+            new FiniteStateMachineAlgorithm.FiniteStateMachineOrigineArrayExample(text, pattern);
+            new FiniteStateMachineAlgorithm.FiniteStateMachineHashExample(text, pattern);
+
+            //Example 4 :
             text = "AAAB ";
             pattern = "AAB";
-
-
-            //text = "我的世世世界 ";
-            //pattern = "世世界";
             new FiniteStateMachineAlgorithm.FiniteStateMachineOrigineArrayExample(text, pattern);
             new FiniteStateMachineAlgorithm.FiniteStateMachineHashExample(text, pattern);
         }
@@ -28,8 +41,10 @@
         {
             public FiniteStateMachineOrigineArrayExample(string text, string pattern)
             {
-                Console.WriteLine(" 陣列 做狀態轉移表 ");
-
+                Console.WriteLine();
+                Console.WriteLine(" 1. 陣列 做狀態轉移表 ");
+                Console.WriteLine($@"文本：{text}");
+                Console.WriteLine($@"查找：{pattern}");
                 var patternFound = this.FiniteStateMachineAlgoritSearch(text, pattern);
                 if (patternFound)
                 {
@@ -125,14 +140,17 @@
         }
 
         /// <summary>
-        /// 優化方法：用 Hash 做狀態轉移表
+        /// 優化方法：用 Hash 做狀態轉移表 - 支援中文匹配
         /// 空間複雜度：O(m) (m: 模式長度)
         /// </summary>
         public class FiniteStateMachineHashExample
         {
             public FiniteStateMachineHashExample(string text, string pattern)
             {
-                Console.WriteLine(" Hash 做狀態轉移表 ");
+                Console.WriteLine();
+                Console.WriteLine(" 2. Hash 做狀態轉移表 ");
+                Console.WriteLine($@"文本：{text}");
+                Console.WriteLine($@"查找：{pattern}");
                 var patternFound = this.FiniteStateMachineAlgoritSearch(text, pattern);
                 if (patternFound)
                 {
@@ -148,51 +166,28 @@
             /// 3. 建立 Hash 的狀態移轉表
             /// </summary>        
             public Dictionary<(int, int), int> InitialPatternPreProcess(string pattern)
-            {                         
-                // 3-1. 初始化狀態轉移表
-                var transitionTable = new Dictionary<(int,int), int>();
-
-                // 3-2. 賦值狀態轉移資料
+            {
+                var transitionTable = new Dictionary<(int, int), int>();
+                // 3-1. 為完全匹配的字符建立狀態轉移
                 for (int state = 0; state < pattern.Length; state++)
                 {
-                    // 3-3. 完全匹配 - 當前 pattern 字元與 ASCII 碼相同
-                    transitionTable.Add((state, pattern[state]), state + 1);
+                    transitionTable[(state, pattern[state])] = state + 1;
                 }
-
-                // 3-4. 建立部分匹配的轉移
-                for (int state = 1; state < pattern.Length; state++)
-                {
-                    for (int c = 0; c < 256; c++) // 假設字元集合為 ASCII 範圍內的所有字符
-                    {
-                        if (transitionTable.ContainsKey((state - 1, c)))
-                        {
-                            int ns = GetPartialState(pattern, state, (char)c);
-                            if (ns == 0)
-                                continue;
-                            transitionTable[(state, c)] = ns;
-                        }
-                    }
-                }
-
                 return transitionTable;
             }
 
+            /// <summary>
+            /// 4-2. 取得部分匹配狀態
+            /// </summary>            
             private int GetPartialState(string pattern, int state, char c)
             {
-                for (int ns = state - 1; ns > 0; ns--)
+                // 尋找匹配的最長前綴
+                for (int ns = state; ns > 0; ns--)
                 {
-                    bool found = true;
-                    for (int i = 0; i < ns; i++)
+                    if (pattern[ns - 1] == c && 
+                        pattern.Substring(0, ns - 1) == pattern.Substring(state - ns + 1, ns - 1))
                     {
-                        if (pattern[i] != pattern[state - ns + i])
-                        {
-                            found = false;
-                            break;
-                        }
-                    }
-                    if (found && pattern[ns] == c)
-                    {
-                        return ns + 1;
+                        return ns;
                     }
                 }
                 return 0;
@@ -210,30 +205,27 @@
                 var currentState = 0;
                 for (int index = 0; index < text.Length; index++)
                 {
-                    if (transitionTable.ContainsKey((currentState, text[index])) &&
-                        pattern[currentState] == text[index])
+                    char currentChar = text[index];
+
+                    // 4-1. 狀態轉移表中沒有對應的狀態，取得部分匹配狀態
+                    if (!transitionTable.ContainsKey((currentState, currentChar)))
                     {
-                        currentState = transitionTable[(currentState, text[index])];
-                    }
-                    else if (transitionTable.ContainsKey((currentState, text[index])))
-                    {
-                        currentState = transitionTable[(currentState, text[index])];
-                    }
-                    else
-                    {
-                        currentState = 0;
+                        int partialState = GetPartialState(pattern, currentState, currentChar);
+                        transitionTable[(currentState, currentChar)] = partialState;
                     }
 
-                    // 4-1. 找到匹配 - 當前狀態達到最終狀態（模式長度）
+                    currentState = transitionTable[(currentState, currentChar)];
+                    
+                    // 5-1. 找到匹配 - 當前狀態達到最終狀態（模式長度）
                     if (currentState == pattern.Length)
                     {
                         return true;
                     }
                 }
-
-                // 4-2. 沒找到 - 當前狀態未達到最終狀態
+                // 5-2. 沒找到 - 當前狀態未達到最終狀態
                 return false;
             }
         }
     }
 }
+
