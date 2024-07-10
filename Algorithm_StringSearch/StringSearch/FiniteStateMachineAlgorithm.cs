@@ -7,9 +7,12 @@
             string text = "HERE IS A SIMPLE EXAMPLE ";
             string pattern = "EXAMPLE";
 
-            text = "AAAB ";
+            text = "AAACB ";
             pattern = "AAB";
 
+
+            //text = "我的世世世界 ";
+            //pattern = "世世界";
             new FiniteStateMachineAlgorithm.FiniteStateMachineOrigineArrayExample(text, pattern);
             new FiniteStateMachineAlgorithm.FiniteStateMachineHashExample(text, pattern);
         }
@@ -52,20 +55,22 @@
                 // 3-2. 賦值狀態轉移資料
                 for (int state = 0; state < pattern.Length; state++)
                 {
-                    //transitionTable[state, pattern[state]] = GetNextState(pattern, state, pattern[state]);
+                    // 3-3. 依照ASCII 碼，將字元對應到狀態
                     for (char c = (char)0; c < alphabetSize; c++)
                     {
                         var getState = GetNextState(pattern, state, c);
                         transitionTable[state, c] = getState;
-                    }
-                    //transitionTable[state, pattern[state]] = state + 1;
+                    }                    
                 }
                 return transitionTable;
             }
 
+            /// <summary>
+            /// 3-3. 依照ASCII 碼，將字元對應到狀態
+            /// </summary>                        
             private int GetNextState(string pattern, int state, char c)
             {
-                // 完全匹配
+                // 完全匹配 - 當前 pattern 字元與 ASCII 碼相同
                 if (state < pattern.Length && c == pattern[state])
                 {
                     return state + 1;
@@ -142,18 +147,89 @@
             /// <summary>
             /// 3. 建立 Hash 的狀態移轉表
             /// </summary>        
-            public Dictionary<int, int> InitialPatternPreProcess(string pattern)
+            public Dictionary<(int, int), int> InitialPatternPreProcess(string pattern)
             {                         
                 // 3-1. 初始化狀態轉移表
-                var transitionTable = new Dictionary<int, int>();
+                var transitionTable = new Dictionary<(int,int), int>();
 
                 // 3-2. 賦值狀態轉移資料
                 for (int state = 0; state < pattern.Length; state++)
                 {
-                    transitionTable.Add(state, pattern[state]);
+                    // 3-3. 完全匹配 - 當前 pattern 字元與 ASCII 碼相同
+                    transitionTable.Add((state, pattern[state]), state + 1);
                 }
+
+                // 3-4. 建立部分匹配的轉移
+                for (int state = 1; state <= pattern.Length; state++)
+                {
+                    for (int c = 0; c < 256; c++) // 假設字元集合為 ASCII 範圍內的所有字符
+                    {
+                        if (!transitionTable.ContainsKey((state, c)))
+                        {
+                            int ns = GetPartialState(pattern, state, (char)c);
+                            transitionTable[(state, c)] = ns;
+                        }
+                    }
+                }
+
                 return transitionTable;
             }
+
+            private int GetPartialState(string pattern, int state, char c)
+            {
+                for (int ns = state - 1; ns > 0; ns--)
+                {
+                    bool found = true;
+                    for (int i = 0; i < ns; i++)
+                    {
+                        if (pattern[i] != pattern[state - ns + i])
+                        {
+                            found = false;
+                            break;
+                        }
+                    }
+                    if (found && pattern[ns] == c)
+                    {
+                        return ns + 1;
+                    }
+                }
+                return 0;
+            }
+
+            ///// <summary>
+            ///// 3-3. 依照ASCII 碼，將字元對應到狀態
+            ///// </summary>                        
+            //private void GetPartialState(
+            //    string pattern, int state, ref Dictionary<(int, int), int> transitionTable)
+            //{
+            //    // 部分匹配
+            //    for (int ns = state; ns > 0; ns--)
+            //    {
+            //        // 找到最長的部分匹配
+            //        if (transitionTable.ContainsKey((state - 1, pattern[ns - 1])))
+            //        {
+            //            // 檢查是否為部分匹配
+            //            // pattern[0] 開始到 pattern[ns - 1] 為部分匹配
+            //            bool isMatch = true;
+            //            for (int index = 0; index < ns - 1; index++)
+            //            {
+            //                //transitionTable.ContainsKey((state - 1, pattern[ns - 1]));
+
+            //                if (transitionTable.ContainsKey((state - ns + 1 + index, pattern[index])))
+            //                {
+            //                    isMatch = false;
+            //                    break;
+            //                }
+            //            }
+            //            if (isMatch && 
+            //                false == transitionTable.ContainsKey((ns, pattern[ns - 1])))
+            //            {
+            //                transitionTable.Add((ns, pattern[ns - 1]), state);
+            //            }
+            //        }
+            //    }                
+            //}
+
 
             /// <summary>
             /// 1. 執行演算法 - 搜尋字串
@@ -167,9 +243,11 @@
                 var currentState = 0;
                 for (int index = 0; index < text.Length; index++)
                 {
-                    currentState = transitionTable[currentState] == text[index] 
-                                   ? currentState + 1 
-                                   : 0;                    
+                    if (transitionTable.ContainsKey((currentState, text[index])) && 
+                        pattern[currentState] == text[index] )
+                    {                        
+                        currentState = transitionTable[(currentState, text[index])];
+                    }                    
 
                     // 4-1. 找到匹配 - 當前狀態達到最終狀態（模式長度）
                     if (currentState == pattern.Length)
