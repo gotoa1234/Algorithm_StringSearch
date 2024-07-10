@@ -7,7 +7,7 @@
             string text = "HERE IS A SIMPLE EXAMPLE ";
             string pattern = "EXAMPLE";
 
-            text = "AAACB ";
+            text = "AAAB ";
             pattern = "AAB";
 
 
@@ -160,13 +160,15 @@
                 }
 
                 // 3-4. 建立部分匹配的轉移
-                for (int state = 1; state <= pattern.Length; state++)
+                for (int state = 1; state < pattern.Length; state++)
                 {
                     for (int c = 0; c < 256; c++) // 假設字元集合為 ASCII 範圍內的所有字符
                     {
-                        if (!transitionTable.ContainsKey((state, c)))
+                        if (transitionTable.ContainsKey((state - 1, c)))
                         {
                             int ns = GetPartialState(pattern, state, (char)c);
+                            if (ns == 0)
+                                continue;
                             transitionTable[(state, c)] = ns;
                         }
                     }
@@ -195,42 +197,7 @@
                 }
                 return 0;
             }
-
-            ///// <summary>
-            ///// 3-3. 依照ASCII 碼，將字元對應到狀態
-            ///// </summary>                        
-            //private void GetPartialState(
-            //    string pattern, int state, ref Dictionary<(int, int), int> transitionTable)
-            //{
-            //    // 部分匹配
-            //    for (int ns = state; ns > 0; ns--)
-            //    {
-            //        // 找到最長的部分匹配
-            //        if (transitionTable.ContainsKey((state - 1, pattern[ns - 1])))
-            //        {
-            //            // 檢查是否為部分匹配
-            //            // pattern[0] 開始到 pattern[ns - 1] 為部分匹配
-            //            bool isMatch = true;
-            //            for (int index = 0; index < ns - 1; index++)
-            //            {
-            //                //transitionTable.ContainsKey((state - 1, pattern[ns - 1]));
-
-            //                if (transitionTable.ContainsKey((state - ns + 1 + index, pattern[index])))
-            //                {
-            //                    isMatch = false;
-            //                    break;
-            //                }
-            //            }
-            //            if (isMatch && 
-            //                false == transitionTable.ContainsKey((ns, pattern[ns - 1])))
-            //            {
-            //                transitionTable.Add((ns, pattern[ns - 1]), state);
-            //            }
-            //        }
-            //    }                
-            //}
-
-
+            
             /// <summary>
             /// 1. 執行演算法 - 搜尋字串
             /// </summary>        
@@ -243,11 +210,19 @@
                 var currentState = 0;
                 for (int index = 0; index < text.Length; index++)
                 {
-                    if (transitionTable.ContainsKey((currentState, text[index])) && 
-                        pattern[currentState] == text[index] )
-                    {                        
+                    if (transitionTable.ContainsKey((currentState, text[index])) &&
+                        pattern[currentState] == text[index])
+                    {
                         currentState = transitionTable[(currentState, text[index])];
-                    }                    
+                    }
+                    else if (transitionTable.ContainsKey((currentState, text[index])))
+                    {
+                        currentState = transitionTable[(currentState, text[index])];
+                    }
+                    else
+                    {
+                        currentState = 0;
+                    }
 
                     // 4-1. 找到匹配 - 當前狀態達到最終狀態（模式長度）
                     if (currentState == pattern.Length)
