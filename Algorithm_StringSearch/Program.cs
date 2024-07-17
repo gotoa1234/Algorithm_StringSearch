@@ -26,4 +26,11 @@ Console.WriteLine("====");
 var alFST = new FiniteStateMachineAlgorithmExecute();
 alFST.Execute();
 
+
+Console.WriteLine("====");
+
+// 5. Trie Algorithm
+var alTire = new TrieAlgorithmExecute();
+alTire.Execute();
+
 Console.WriteLine("Wait a minute.");
