@@ -4,9 +4,9 @@
     {
         public void Execute()
         {
-            string text = "HERE IS A SIMPLE EXAMPLE ";            
+            string text = "HERE IS A SIMPLE EXAMPLE ITEM";
             TrieAlgorithm trie = new TrieAlgorithm(text);
-            var pattern = "EXAMPLE";
+            var pattern = "EXAMPLES";
             Console.WriteLine($@"Text：{text}");
             Console.WriteLine($@"Pattern：{pattern} 查詢結果：{trie.Search(pattern)}");
             pattern = "SIM";
@@ -29,7 +29,11 @@
         public TrieAlgorithm(string text)
         {
             root = new TrieNode();
-            this.Insert(text);
+            var textSplite = text.Split(' ');
+            foreach (var item in textSplite)
+            {
+                this.Insert(item);
+            }
         }
 
         /// <summary>
@@ -108,20 +112,19 @@
         /// <summary>
         /// 字元與子節點的映射
         /// </summary>
-        public Dictionary<char, TrieNode> Children { get; private set; }
+        public Dictionary<char, TrieNode> Children { get; private set; } 
+            = new Dictionary<char, TrieNode>();
 
         /// <summary>
         /// 是否為字的結尾
         /// </summary>
-        public bool IsEndOfWord { get; set; }
+        public bool IsEndOfWord { get; set; } = false;
 
         /// <summary>
         /// 建構子
         /// </summary>
         public TrieNode()
         {
-            Children = new Dictionary<char, TrieNode>();
-            IsEndOfWord = false;
         }
     }
 }

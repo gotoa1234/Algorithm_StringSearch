@@ -33,4 +33,15 @@ Console.WriteLine("====");
 var alTire = new TrieAlgorithmExecute();
 alTire.Execute();
 
+Console.WriteLine("====");
+
+// 6. Suffix Tree Algorithm
+var alSuffix = new SuffixTreeAlgorithmExecute();
+alSuffix.Execute();
+
+Console.WriteLine("====");
+
+
+
+
 Console.WriteLine("Wait a minute.");
