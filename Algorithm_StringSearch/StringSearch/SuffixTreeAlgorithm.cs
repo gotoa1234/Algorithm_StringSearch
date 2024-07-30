@@ -1,165 +1,225 @@
-﻿namespace Algorithm_StringSearch.StringSearch
+﻿using System.Runtime.InteropServices;
+
+namespace Algorithm_StringSearch.StringSearch
 {
     public class SuffixTreeAlgorithmExecute
     {
         public void Execute()
         {
+            // 空間複雜度：𝑂(𝑛log⁡𝑛)
             string text = "bananas";
+            // [建構]後綴樹的時間複雜度是 𝑂(𝑛^2) ※另一種 Ukkonen 算法只需 𝑂(𝑛)
             var suffixTree = new SuffixTreeAlgorithm(text);
 
-            Console.WriteLine("Suffix Tree built for text: " + text);
+            Console.WriteLine("後綴樹成功建立。");
 
-            string substring = "ana";
-            Console.WriteLine($"Does the text contain the substring '{substring}'? " + suffixTree.ContainsSubstring(substring));
+            // [搜尋]時間複雜度：O(m)，其中 𝑚 m 是模式的長度
+            string pattern = "ana";
+            Console.WriteLine($"模式 '{pattern}' 是否存在: {suffixTree.Search(pattern)}");
+
+            pattern = "nana";
+            Console.WriteLine($"模式 '{pattern}' 是否存在: {suffixTree.Search(pattern)}");
+
+            pattern = "apple";
+            Console.WriteLine($"模式 '{pattern}' 是否存在: {suffixTree.Search(pattern)}");
+
+/*
+
+[建構過程的詳細說明]
+1. 初始化：
+   - 創建一個空的根節點。
+   - 遍歷文本的每個後綴。
+
+2. 添加後綴：
+   - 對於每個後綴，從根節點開始。
+   - 根據後綴的字符遍歷樹。
+   - 如果當前節點的子節點中沒有找到相應字符，為此字符創建一個新節點。
+   - 繼續此過程，直到整個後綴被添加到樹中。
+   - 在終端節點更新後綴索引。       
+
+[搜尋過程的詳細說明]
+1. 從根節點開始：
+   - 從後綴樹的根節點開始。
+2. 遍歷樹：
+   - 對於模式中的每個字符，檢查當前節點的子節點中是否存在相應的字符。
+   - 如果子節點存在，則移動到該節點。
+   - 如果子節點不存在，則該模式不在文本中。
+3. 結果：
+   - 如果找到模式中的所有字符，則該模式存在於文本中。
+   - 否則，該模式不存在。
+
+ */
         }
     }
 
     public class SuffixTreeAlgorithm
     {
-        private readonly string text;
-        private readonly Node root;
-        private Node activeNode;
-        private int activeEdge;
-        private int activeLength;
-        private int remainingSuffixCount;
-        private int leafEnd;
-        private Node lastCreatedInternalNode;
+        private readonly string _text;
+        private readonly SuffixTreeNode _root;
+        private SuffixTreeNode _activeNode;
+        private int _activeEdge;
+        private int _activeLength;
+        private int _remainingSuffixCount;
+        private int _leafEnd;
+        private SuffixTreeNode _lastNewNode;
+        private int _currentPos;
 
+
+        /// <summary>
+        /// 建構式
+        /// </summary>        
         public SuffixTreeAlgorithm(string text)
         {
-            this.text = text;
-            root = new Node(-1, -1);
-            activeNode = root;
-            activeEdge = -1;
-            activeLength = 0;
-            remainingSuffixCount = 0;
-            leafEnd = -1;
-            lastCreatedInternalNode = null;
+            _text = text;
+            _root = new SuffixTreeNode(-1);
+            _root.SuffixLink = _root;
+            _activeNode = _root;
+            _activeEdge = -1;
+            _activeLength = 0;
+            _remainingSuffixCount = 0;
+            _leafEnd = -1;
+            _lastNewNode = null;
+            _currentPos = -1;
 
+            // 建立後綴樹
             BuildSuffixTree();
         }
+
+        /// <summary>
+        /// 建立後綴樹
+        /// </summary>
         private void BuildSuffixTree()
         {
-            for (int i = 0; i < text.Length; i++)
+            // 依序加入所有後綴
+            for (int index = 0; index < _text.Length; index++)
             {
-                ExtendSuffixTree(i);
+                ExtendSuffixTree(index);
             }
         }
 
+        /// <summary>
+        /// 添加後綴
+        /// </summary>       
         private void ExtendSuffixTree(int pos)
         {
-            leafEnd = pos;
-            remainingSuffixCount++;
-            lastCreatedInternalNode = null;
+            _leafEnd = pos;
+            _remainingSuffixCount++;
+            _lastNewNode = null;
 
-            while (remainingSuffixCount > 0)
+            while (_remainingSuffixCount > 0)
             {
-                if (activeLength == 0)
-                {
-                    activeEdge = pos;
-                }
+                if (_activeLength == 0)
+                    _activeEdge = pos;
 
-                char currentChar = text[activeEdge];
-                if (!activeNode.Children.ContainsKey(currentChar))
+                if (!_activeNode.Children.ContainsKey(_text[_activeEdge]))
                 {
-                    activeNode.Children[currentChar] = new Node(pos, leafEnd);
-                    if (lastCreatedInternalNode != null)
+                    _activeNode.Children[_text[_activeEdge]] = new SuffixTreeNode(pos, _leafEnd);
+
+                    if (_lastNewNode != null)
                     {
-                        lastCreatedInternalNode.SuffixLink = activeNode;
-                        lastCreatedInternalNode = null;
+                        _lastNewNode.SuffixLink = _activeNode;
+                        _lastNewNode = null;
                     }
                 }
                 else
                 {
-                    Node nextNode = activeNode.Children[currentChar];
-                    int edgeLength = nextNode.End - nextNode.Start + 1;
-
-                    if (activeLength >= edgeLength)
+                    SuffixTreeNode next = _activeNode.Children[_text[_activeEdge]];
+                    if (_activeLength >= next.EdgeLength(pos))
                     {
-                        activeEdge += edgeLength;
-                        activeLength -= edgeLength;
-                        activeNode = nextNode;
+                        _activeEdge += next.EdgeLength(pos);
+                        _activeLength -= next.EdgeLength(pos);
+                        _activeNode = next;
                         continue;
                     }
 
-                    if (text[nextNode.Start + activeLength] == text[pos])
+                    if (_text[next.Start + _activeLength] == _text[pos])
                     {
-                        activeLength++;
-                        if (lastCreatedInternalNode != null)
+                        if (_lastNewNode != null && _activeNode != _root)
                         {
-                            lastCreatedInternalNode.SuffixLink = activeNode;
-                            lastCreatedInternalNode = null;
+                            _lastNewNode.SuffixLink = _activeNode;
+                            _lastNewNode = null;
                         }
+
+                        _activeLength++;
                         break;
                     }
 
-                    Node splitNode = new Node(nextNode.Start, nextNode.Start + activeLength - 1);
-                    activeNode.Children[currentChar] = splitNode;
-                    splitNode.Children[text[pos]] = new Node(pos, leafEnd);
-                    nextNode.Start += activeLength;
-                    splitNode.Children[text[nextNode.Start]] = nextNode;
+                    int splitEnd = next.Start + _activeLength - 1;
+                    SuffixTreeNode split = new SuffixTreeNode(next.Start, splitEnd);
+                    _activeNode.Children[_text[_activeEdge]] = split;
 
-                    if (lastCreatedInternalNode != null)
+                    split.Children[_text[pos]] = new SuffixTreeNode(pos, _leafEnd);
+                    next.Start += _activeLength;
+                    split.Children[_text[next.Start]] = next;
+
+                    if (_lastNewNode != null)
                     {
-                        lastCreatedInternalNode.SuffixLink = splitNode;
+                        _lastNewNode.SuffixLink = split;
                     }
-                    lastCreatedInternalNode = splitNode;
+
+                    _lastNewNode = split;
                 }
 
-                remainingSuffixCount--;
+                _remainingSuffixCount--;
 
-                if (activeNode == root && activeLength > 0)
+                if (_activeNode == _root && _activeLength > 0)
                 {
-                    activeLength--;
-                    activeEdge = pos - remainingSuffixCount + 1;
+                    _activeLength--;
+                    _activeEdge = pos - _remainingSuffixCount + 1;
                 }
-                else if (activeNode != root)
+                else if (_activeNode != _root)
                 {
-                    activeNode = activeNode.SuffixLink;
+                    _activeNode = _activeNode.SuffixLink;
                 }
             }
         }
 
-        public bool ContainsSubstring(string substring)
+
+        // 搜尋
+        public bool Search(string pattern)
         {
-            Node currentNode = root;
-            int substringIndex = 0;
-
-            while (substringIndex < substring.Length)
+            SuffixTreeNode currentNode = _root;
+            int length = 0;
+            foreach (char ch in pattern)
             {
-                if (!currentNode.Children.ContainsKey(substring[substringIndex]))
+                if (!currentNode.Children.ContainsKey(ch))
                 {
                     return false;
                 }
-
-                Node nextNode = currentNode.Children[substring[substringIndex]];
-                int edgeLength = nextNode.End - nextNode.Start + 1;
-                int lengthToMatch = Math.Min(edgeLength, substring.Length - substringIndex);
-
-                if (text.Substring(nextNode.Start, lengthToMatch) != substring.Substring(substringIndex, lengthToMatch))
+                currentNode = currentNode.Children[ch];
+                length++;
+                if (length >= pattern.Length)
                 {
-                    return false;
+                    return true;
                 }
-
-                substringIndex += lengthToMatch;
-                currentNode = nextNode;
             }
-
             return true;
         }
 
 
-        private class Node
+        /// <summary>
+        /// 後綴樹節點
+        /// </summary>
+        public class SuffixTreeNode
         {
-            public Dictionary<char, Node> Children { get; } = new Dictionary<char, Node>();
+            public Dictionary<char, SuffixTreeNode> Children { get; private set; }
+            public SuffixTreeNode SuffixLink { get; set; }
             public int Start { get; set; }
             public int End { get; set; }
-            public Node SuffixLink { get; set; }
+            public int SuffixIndex { get; set; }
 
-            public Node(int start, int end)
+            public SuffixTreeNode(int start, int end = -1)
             {
+                Children = new Dictionary<char, SuffixTreeNode>();
+                SuffixLink = null;
                 Start = start;
                 End = end;
+                SuffixIndex = -1;
+            }
+
+            public int EdgeLength(int position)
+            {
+                return Math.Min(End, position + 1) - Start;
             }
         }
     }
